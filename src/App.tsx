@@ -17,8 +17,8 @@ function App() {
     currency: 'GBP',
     batteryType: 'LiFePO4',
     daysOfAutonomy: 2,
-    depthOfDischarge: 0.8,
-    batteryEfficiency: 0.95,
+    depthOfDischarge: 0.9,
+    batteryEfficiency: 0.98,
     inverterEfficiency: 0.9,
     solarEfficiency: 0.8,
     peakSunHours: 5

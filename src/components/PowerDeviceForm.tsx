@@ -20,6 +20,11 @@ export default function PowerDeviceForm({ devices, onDevicesChange, defaultVolta
     currentType: 'DC'
   });
 
+  // Update new device voltage when default voltage changes
+  React.useEffect(() => {
+    setNewDevice(prev => ({ ...prev, voltage: defaultVoltage }));
+  }, [defaultVoltage]);
+
   const addDevice = () => {
     if (newDevice.name && newDevice.watts > 0) {
       const device: PowerDevice = {
@@ -102,7 +107,7 @@ export default function PowerDeviceForm({ devices, onDevicesChange, defaultVolta
         <input
           type="number"
           placeholder="Volts"
-          value={newDevice.voltage || ''}
+          value={newDevice.voltage}
           onChange={(e) => {
             const voltage = Number(e.target.value);
             const currentType = voltage === 230 ? 'AC' : 'DC';
@@ -141,6 +146,7 @@ export default function PowerDeviceForm({ devices, onDevicesChange, defaultVolta
         <button
           onClick={addDevice}
           className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 flex items-center justify-center"
+          aria-label="Add device"
         >
           <Plus size={20} />
         </button>
@@ -202,6 +208,7 @@ export default function PowerDeviceForm({ devices, onDevicesChange, defaultVolta
             <button
               onClick={() => removeDevice(device.id)}
               className="text-red-500 hover:text-red-700 flex justify-center"
+              aria-label={`Delete ${device.name}`}
             >
               <Trash2 size={16} />
             </button>

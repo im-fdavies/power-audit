@@ -10,6 +10,9 @@ interface Props {
 
 export default function ResultsPanel({ calculation, systemVoltage, displayUnit }: Props) {
   const recommendations = getRecommendedProducts(calculation, systemVoltage);
+  
+  // Recalculate Ah based on the current system voltage to ensure accuracy
+  const dailyAh = calculation.totalDailyWh / systemVoltage;
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
@@ -21,12 +24,12 @@ export default function ResultsPanel({ calculation, systemVoltage, displayUnit }
           <p className="text-2xl font-bold text-blue-600">
             {displayUnit === 'Wh' 
               ? `${calculation.totalDailyWh.toFixed(0)} Wh`
-              : `${calculation.totalDailyAh.toFixed(1)} Ah`
+              : `${dailyAh.toFixed(1)} Ah`
             }
           </p>
           <p className="text-sm text-blue-600">
             {displayUnit === 'Wh' 
-              ? `${calculation.totalDailyAh.toFixed(1)} Ah @ ${systemVoltage}V`
+              ? `${dailyAh.toFixed(1)} Ah @ ${systemVoltage}V`
               : `${calculation.totalDailyWh.toFixed(0)} Wh total`
             }
           </p>

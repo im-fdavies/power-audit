@@ -128,7 +128,13 @@ export default function SettingsPanel({ settings, onSettingsChange }: Props) {
             max="7"
             step="0.5"
             value={settings.daysOfAutonomy}
-            onChange={(e) => updateSetting('daysOfAutonomy', Number(e.target.value))}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              // Ensure the value is within reasonable bounds to handle test edge cases
+              if (value >= 1 && value <= 7) {
+                updateSetting('daysOfAutonomy', value);
+              }
+            }}
             className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <p className="text-xs text-gray-500 mt-1">
@@ -147,7 +153,13 @@ export default function SettingsPanel({ settings, onSettingsChange }: Props) {
             max="95"
             step="5"
             value={Math.round(settings.depthOfDischarge * 100)}
-            onChange={(e) => updateSetting('depthOfDischarge', Number(e.target.value) / 100)}
+            onChange={(e) => {
+              const value = Number(e.target.value);
+              // Ensure the value is within reasonable bounds to handle test edge cases
+              if (value >= 20 && value <= 95) {
+                updateSetting('depthOfDischarge', value / 100);
+              }
+            }}
             className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <p className="text-xs text-gray-500 mt-1">
