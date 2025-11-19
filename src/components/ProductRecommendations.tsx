@@ -17,6 +17,20 @@ export default function ProductRecommendations({ calculation, systemVoltage, cur
 
   const currentTier = productTiers[selectedTier];
 
+  const getCurrencySymbol = () => {
+    switch (currency) {
+      case 'GBP': return '£';
+      case 'USD': return '$';
+      case 'EUR': return '€';
+      default: return '£';
+    }
+  };
+
+  const formatPriceRange = (range: string) => {
+    // Replace $ with the current currency symbol
+    return range.replace(/\$/g, getCurrencySymbol());
+  };
+
   const filterProducts = (products: Product[]) => {
     if (!searchTerm) return products;
     return products.filter(p => 
@@ -30,7 +44,7 @@ export default function ProductRecommendations({ calculation, systemVoltage, cur
     <div className="border rounded-lg p-4 hover:shadow-md transition-shadow">
       <div className="flex justify-between items-start mb-2">
         <h4 className="font-medium text-gray-900">{product.name}</h4>
-        <span className="text-lg font-bold text-green-600">${product.price}</span>
+        <span className="text-lg font-bold text-green-600">{getCurrencySymbol()}{product.price}</span>
       </div>
       <p className="text-sm text-gray-600 mb-2">{product.brand}</p>
       <p className="text-sm text-gray-700 mb-3">{product.specs}</p>
@@ -86,7 +100,7 @@ export default function ProductRecommendations({ calculation, systemVoltage, cur
       <div className="bg-blue-50 p-4 rounded-lg mb-6">
         <h3 className="font-medium text-blue-900 mb-1">{currentTier.name} Tier</h3>
         <p className="text-blue-800 text-sm mb-2">{currentTier.description}</p>
-        <p className="text-blue-700 font-medium">{currentTier.priceRange}</p>
+        <p className="text-blue-700 font-medium">{formatPriceRange(currentTier.priceRange)}</p>
       </div>
 
       {/* Cost Breakdown */}
