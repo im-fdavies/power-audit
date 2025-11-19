@@ -81,7 +81,8 @@ export default function CostBreakdown({ calculation, selectedTier, currency }: P
 
   const costs = calculateCosts();
   const costPerWh = costs.total / calculation.totalDailyWh;
-  const paybackYears = costs.total / (calculation.totalDailyWh * 365 * 0.15 / 1000); // Assuming $0.15/kWh
+  const electricityRate = 0.15; // Cost per kWh
+  const paybackYears = costs.total / (calculation.totalDailyWh * 365 * electricityRate / 1000);
 
   return (
     <div className="bg-white p-6 rounded-lg shadow-md">
@@ -150,7 +151,7 @@ export default function CostBreakdown({ calculation, selectedTier, currency }: P
               <span className="text-2xl font-bold text-green-600">
                 {paybackYears.toFixed(1)} years
               </span>
-              <p className="text-xs text-green-600">vs grid electricity at $0.15/kWh</p>
+              <p className="text-xs text-green-600">vs grid electricity at {getCurrencySymbol()}0.15/kWh</p>
             </div>
 
             <div className="bg-yellow-50 p-3 rounded">
