@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { DeviceRow } from './DeviceRow';
+import { Tooltip } from './Tooltip';
 import { DEVICE_PRESETS, type DevicePreset } from '../domain/presets';
 import { formatWh } from '../domain/format';
 import type { Device, SizingResult } from '../domain/types';
@@ -13,14 +14,39 @@ interface Props {
 }
 
 const HEADINGS: { label: string; hint?: string; align?: 'right' }[] = [
-  { label: 'Device' },
-  { label: 'Watts', hint: 'Running draw of one unit' },
-  { label: 'Qty' },
-  { label: 'Hrs/day', hint: 'Hours switched on' },
-  { label: 'Duty %', hint: 'Share of those hours actually drawing power' },
-  { label: 'Surge x', hint: 'Multiple of running watts at startup' },
-  { label: 'Supply' },
-  { label: 'Wh/day', align: 'right' },
+  {
+    label: 'Device',
+    hint: 'Just a label to keep track of. Nothing in the sizing depends on the name.',
+  },
+  {
+    label: 'Watts',
+    hint: 'Running draw of a single unit, off its rating plate. Not the startup figure - that goes in Surge.',
+  },
+  {
+    label: 'Qty',
+    hint: 'How many of this device you have. Four identical lights are one row with a quantity of four.',
+  },
+  {
+    label: 'Hrs/day',
+    hint: 'Hours a day the device is switched on, whether or not it is drawing the whole time.',
+  },
+  {
+    label: 'Duty %',
+    hint: 'Of those switched-on hours, the share it actually draws power. A fridge compressor cycles, so it sits nearer 35%. A light is either on or off, so it is 100%.',
+  },
+  {
+    label: 'Surge x',
+    hint: 'Startup inrush as a multiple of running watts. Motors and compressors pull three to five times for a moment; electronics pull one. Only affects the inverter rating.',
+  },
+  {
+    label: 'Supply',
+    hint: 'DC comes straight off the battery. AC goes through the inverter and carries its conversion losses.',
+  },
+  {
+    label: 'Wh/day',
+    hint: 'What this row costs you in a day: watts x quantity x hours x duty.',
+    align: 'right',
+  },
   { label: '' },
 ];
 
@@ -89,14 +115,13 @@ export function DeviceTable({ result, onAdd, onChange, onRemove, onDuplicate }: 
                 {HEADINGS.map(h => (
                   <th
                     key={h.label}
-                    title={h.hint}
                     scope="col"
                     className={`px-2 py-2 text-xs font-medium whitespace-nowrap ${
                       h.align === 'right' ? 'text-right' : 'text-left'
                     }`}
                     style={{ color: 'var(--ink-soft)' }}
                   >
-                    {h.label}
+                    {h.hint ? <Tooltip label={h.hint}>{h.label}</Tooltip> : h.label}
                   </th>
                 ))}
               </tr>

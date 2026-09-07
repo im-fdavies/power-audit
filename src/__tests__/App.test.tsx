@@ -1,5 +1,5 @@
 import { describe, expect, it, beforeEach } from 'vitest';
-import { render, screen, within } from '@testing-library/react';
+import { act, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import App from '../App';
 
@@ -126,5 +126,89 @@ describe('App', () => {
 
     const footer = screen.getByText(/at the loads, before inverter losses/i).closest('tr')!;
     expect(within(footer).getByText('200 Wh')).toBeInTheDocument();
+  });
+});
+
+describe('Start over', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('is hidden until there is something to clear', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    expect(screen.queryByRole('button', { name: /start over/i })).not.toBeInTheDocument();
+    await addDevice(user);
+    expect(screen.getByRole('button', { name: /start over/i })).toBeInTheDocument();
+  });
+
+  it('asks before clearing, and does nothing if declined', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
+    await user.type(screen.getByLabelText('Device name'), 'Fridge');
+
+    await user.click(screen.getByRole('button', { name: /start over/i }));
+    expect(screen.getByText(/clear every device/i)).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: /keep it/i }));
+    expect(screen.getByLabelText('Device name')).toHaveValue('Fridge');
+    expect(screen.queryByText(/clear every device/i)).not.toBeInTheDocument();
+  });
+
+  it('clears devices and settings when confirmed', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
+    await user.click(screen.getByRole('button', { name: '48V' }));
+
+    await user.click(screen.getByRole('button', { name: /start over/i }));
+    await user.click(screen.getByRole('button', { name: /clear it/i }));
+
+    expect(screen.getByText(/no loads yet/i)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '12V' })).toHaveAttribute('aria-pressed', 'true');
+  });
+});
+
+describe('tooltips', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('explains duty cycle on hover and clears on unhover', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
+
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+    await user.hover(screen.getByText('Duty %'));
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/fridge compressor cycles/i);
+
+    await user.unhover(screen.getByText('Duty %'));
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+
+  it('explains a system setting on keyboard focus', () => {
+    render(<App />);
+    const trigger = screen.getByText('Peak sun hours');
+    act(() => trigger.focus());
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/worst month/i);
+    expect(trigger).toHaveAttribute('aria-describedby', screen.getByRole('tooltip').id);
+  });
+
+  it('dismisses on Escape', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    act(() => screen.getByText('Array derate').focus());
+    expect(screen.getByRole('tooltip')).toBeInTheDocument();
+    await user.keyboard('{Escape}');
+    expect(screen.queryByRole('tooltip')).not.toBeInTheDocument();
+  });
+
+  it('covers every device table column that is not the actions column', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
+    for (const heading of ['Device', 'Watts', 'Qty', 'Hrs/day', 'Duty %', 'Surge x', 'Supply', 'Wh/day']) {
+      await user.hover(screen.getByText(heading));
+      expect(screen.getByRole('tooltip').textContent).toBeTruthy();
+      await user.unhover(screen.getByText(heading));
+    }
   });
 });
