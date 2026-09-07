@@ -1,3 +1,147 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/*
+  Tokens live on :root so light is the base and dark only overrides them.
+  The palette is deliberately warm - a calculator for boats and vans should not
+  feel like a bank dashboard.
+*/
+:root {
+  --paper: #f7f5f2;
+  --panel: #ffffff;
+  --panel-sunk: #f1eeea;
+  --line: #e2ded8;
+  --line-strong: #cdc7be;
+  --ink: #17191d;
+  --ink-soft: #5b6169;
+  --ink-faint: #8b9199;
+  --accent: #b4530a;
+  --accent-soft: #fdf0e3;
+  --battery: #0f6e5c;
+  --battery-soft: #e6f2ef;
+  --caution: #8a5a06;
+  --caution-soft: #fdf4e2;
+  --problem: #a12a20;
+  --problem-soft: #fbeceb;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --paper: #101215;
+    --panel: #171a1f;
+    --panel-sunk: #1e2229;
+    --line: #282d35;
+    --line-strong: #3a414b;
+    --ink: #e9e6e1;
+    --ink-soft: #9aa1ab;
+    --ink-faint: #6b727c;
+    --accent: #f0954a;
+    --accent-soft: #2a1d12;
+    --battery: #4fbfa4;
+    --battery-soft: #12241f;
+    --caution: #e0a94a;
+    --caution-soft: #2a2113;
+    --problem: #e8837a;
+    --problem-soft: #2b1917;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Numbers should line up in columns and never jitter as they recalculate. */
+.tabular {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.field {
+  width: 100%;
+  background: var(--panel);
+  border: 1px solid var(--line-strong);
+  border-radius: 6px;
+  color: var(--ink);
+  padding: 0.4rem 0.55rem;
+  font-size: 0.875rem;
+  font-family: inherit;
+}
+
+.field:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+  border-color: var(--accent);
+}
+
+.field-num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+/* Strip the spinners - they are a hit target that only ever gets clicked by accident. */
+.field-num::-webkit-outer-spin-button,
+.field-num::-webkit-inner-spin-button {
+  appearance: none;
+  margin: 0;
+}
+.field-num {
+  -moz-appearance: textfield;
+}
+
+.btn {
+  border: 1px solid var(--line-strong);
+  background: var(--panel);
+  color: var(--ink);
+  border-radius: 6px;
+  padding: 0.4rem 0.7rem;
+  font-size: 0.8125rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--panel-sunk);
+}
+
+.btn:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.btn-primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+  font-weight: 500;
+}
+
+.btn-primary:hover {
+  filter: brightness(1.08);
+  background: var(--accent);
+}
+
+.label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--ink-soft);
+  margin-bottom: 0.25rem;
+}

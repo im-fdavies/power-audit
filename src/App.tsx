@@ -1,193 +1,74 @@
-import React, { useState, useEffect } from 'react';
-import { Calculator, Settings as SettingsIcon, Zap, Search } from 'lucide-react';
-import PowerDeviceForm from './components/PowerDeviceForm';
-import SettingsPanel from './components/SettingsPanel';
-import ResultsPanel from './components/ResultsPanel';
-import ProductRecommendations from './components/ProductRecommendations';
-import ProductLookup from './components/ProductLookup';
-import { PowerDevice, Settings, PowerCalculation } from './types';
-import { calculatePowerRequirements } from './utils/calculations';
+import { DeviceTable } from './components/DeviceTable';
+import { SettingsPanel } from './components/SettingsPanel';
+import { ResultsPanel } from './components/ResultsPanel';
+import { useSystem } from './state/useSystem';
 
-function App() {
-  const [devices, setDevices] = useState<PowerDevice[]>([]);
-  const [settings, setSettings] = useState<Settings>({
-    defaultVoltage: 12,
-    systemVoltage: 12,
-    displayUnit: 'Wh',
-    currency: 'GBP',
-    batteryType: 'LiFePO4',
-    daysOfAutonomy: 2,
-    depthOfDischarge: 0.9,
-    batteryEfficiency: 0.98,
-    inverterEfficiency: 0.9,
-    solarEfficiency: 0.8,
-    peakSunHours: 5
-  });
-  const [calculation, setCalculation] = useState<PowerCalculation>({
-    totalDailyWh: 0,
-    totalDailyAh: 0,
-    batteryCapacityNeeded: 0,
-    solarPanelWatts: 0,
-    inverterWatts: 0
-  });
-  const [activeTab, setActiveTab] = useState<'calculator' | 'products' | 'lookup' | 'settings'>('calculator');
-
-  useEffect(() => {
-    const newCalculation = calculatePowerRequirements(devices, settings);
-    setCalculation(newCalculation);
-  }, [devices, settings]);
-
-  // Sample devices for demo
-  useEffect(() => {
-    setDevices([
-      {
-        id: '1',
-        name: 'LED Lights',
-        watts: 20,
-        voltage: 12,
-        hoursPerDay: 6,
-        category: 'lighting',
-        currentType: 'DC'
-      },
-      {
-        id: '2',
-        name: 'Laptop',
-        watts: 65,
-        voltage: 230,
-        hoursPerDay: 8,
-        category: 'electronics',
-        currentType: 'AC'
-      },
-      {
-        id: '3',
-        name: 'Refrigerator',
-        watts: 150,
-        voltage: 230,
-        hoursPerDay: 12,
-        category: 'appliances',
-        currentType: 'AC'
-      }
-    ]);
-  }, []);
+export default function App() {
+  const { state, dispatch, result } = useSystem();
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-4">
-            <div className="flex items-center">
-              <Zap className="h-8 w-8 text-blue-600 mr-3" />
-              <h1 className="text-2xl font-bold text-gray-900">Power Calculator</h1>
-            </div>
-            <p className="text-gray-600 hidden md:block">
-              Design your perfect solar & battery system
+    <div className="min-h-screen">
+      <header
+        className="px-5 py-4"
+        style={{ borderBottom: '1px solid var(--line)', background: 'var(--panel)' }}
+      >
+        <div className="max-w-6xl mx-auto flex items-baseline justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="text-base font-semibold m-0">Power Audit</h1>
+            <p className="text-xs m-0 mt-0.5" style={{ color: 'var(--ink-soft)' }}>
+              Size the battery bank, solar array, inverter and charge controller for a boat,
+              van or off-grid cabin.
             </p>
           </div>
+          {state.devices.length > 0 && (
+            <button
+              className="btn"
+              onClick={() => {
+                if (confirm('Clear every device and reset the system settings?')) {
+                  dispatch({ type: 'system/reset' });
+                }
+              }}
+            >
+              Start over
+            </button>
+          )}
         </div>
       </header>
 
-      {/* Navigation */}
-      <nav className="bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex space-x-8">
-            <button
-              onClick={() => setActiveTab('calculator')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'calculator'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Calculator className="inline-block w-4 h-4 mr-2" />
-              Calculator
-            </button>
-            <button
-              onClick={() => setActiveTab('products')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'products'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              Products
-            </button>
-            <button
-              onClick={() => setActiveTab('lookup')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'lookup'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <Search className="inline-block w-4 h-4 mr-2" />
-              Product Lookup
-            </button>
-            <button
-              onClick={() => setActiveTab('settings')}
-              className={`py-4 px-1 border-b-2 font-medium text-sm ${
-                activeTab === 'settings'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <SettingsIcon className="inline-block w-4 h-4 mr-2" />
-              Settings
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'calculator' && (
-          <div className="space-y-6">
-            <PowerDeviceForm 
-              devices={devices} 
-              onDevicesChange={setDevices} 
-              defaultVoltage={settings.defaultVoltage}
-              onDefaultVoltageChange={(voltage) => setSettings({...settings, defaultVoltage: voltage as 12 | 24 | 48 | 230})}
-            />
-            <ResultsPanel 
-              calculation={calculation} 
-              systemVoltage={settings.systemVoltage}
-              displayUnit={settings.displayUnit}
-            />
-          </div>
-        )}
-
-        {activeTab === 'products' && (
-          <ProductRecommendations 
-            calculation={calculation} 
-            systemVoltage={settings.systemVoltage}
-            currency={settings.currency}
+      {/*
+        Stacked, the sizing has to come before the settings - it is the answer
+        the page exists to give, and burying it under a form means scrolling
+        past everything to find out whether the last edit mattered.
+      */}
+      <main className="max-w-6xl mx-auto p-5 grid gap-5 lg:grid-cols-[1fr_320px] items-start">
+        <div className="min-w-0 lg:col-start-1 lg:row-start-1">
+          <DeviceTable
+            result={result}
+            onAdd={preset => dispatch({ type: 'device/add', preset })}
+            onChange={(id, patch) => dispatch({ type: 'device/update', id, patch })}
+            onRemove={id => dispatch({ type: 'device/remove', id })}
+            onDuplicate={id => dispatch({ type: 'device/duplicate', id })}
           />
-        )}
+        </div>
 
-        {activeTab === 'lookup' && (
-          <ProductLookup />
-        )}
+        <div className="lg:col-start-2 lg:row-start-1 lg:sticky lg:top-5">
+          <ResultsPanel result={result} />
+        </div>
 
-        {activeTab === 'settings' && (
-          <SettingsPanel settings={settings} onSettingsChange={setSettings} />
-        )}
+        <div className="min-w-0 lg:col-start-1 lg:row-start-2">
+          <SettingsPanel
+            settings={state.settings}
+            onChange={patch => dispatch({ type: 'settings/update', patch })}
+          />
+        </div>
       </main>
 
-      {/* Footer */}
-      <footer className="bg-white border-t mt-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center text-gray-600">
-            <p className="mb-2">
-              Power Calculator - Design your perfect off-grid power system
-            </p>
-            <p className="text-sm">
-              Get personalized recommendations for boats, vans, and off-grid homes
-            </p>
-          </div>
-        </div>
+      <footer className="max-w-6xl mx-auto px-5 pb-8">
+        <p className="text-xs m-0" style={{ color: 'var(--ink-faint)' }}>
+          A planning tool, not a design certificate. Have any installation that touches mains
+          voltage, gas or a vessel's existing wiring signed off by a qualified electrician.
+        </p>
       </footer>
     </div>
   );
 }
-
-export default App;

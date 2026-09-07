@@ -1,114 +1,130 @@
-import { describe, it, expect } from 'vitest'
-import { render, screen } from '@testing-library/react'
-import userEvent from '@testing-library/user-event'
-import App from '../App'
+import { describe, expect, it, beforeEach } from 'vitest';
+import { render, screen, within } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import App from '../App';
 
-describe('App Integration Tests', () => {
-  it('renders the main application', () => {
-    render(<App />)
-    
-    expect(screen.getByText('Power Calculator')).toBeInTheDocument()
-    expect(screen.getByText('Design your perfect solar & battery system')).toBeInTheDocument()
-  })
+async function addDevice(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(screen.getByRole('button', { name: 'Add device' }));
+}
 
-  it('shows navigation tabs', () => {
-    render(<App />)
-    
-    expect(screen.getByText('Calculator')).toBeInTheDocument()
-    expect(screen.getByText('Products')).toBeInTheDocument()
-    expect(screen.getByText('Product Lookup')).toBeInTheDocument()
-    expect(screen.getByText('Settings')).toBeInTheDocument()
-  })
+async function setNumber(label: RegExp | string, value: string) {
+  const user = userEvent.setup();
+  const field = screen.getByLabelText(label);
+  await user.clear(field);
+  await user.type(field, value);
+  return field;
+}
 
-  it('starts with calculator tab active', () => {
-    render(<App />)
-    
-    expect(screen.getByText('Power Devices')).toBeInTheDocument()
-    expect(screen.getByText('Power Requirements')).toBeInTheDocument()
-  })
+describe('App', () => {
+  beforeEach(() => localStorage.clear());
 
-  it('loads with sample devices', () => {
-    render(<App />)
-    
-    expect(screen.getByDisplayValue('LED Lights')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Laptop')).toBeInTheDocument()
-    expect(screen.getByDisplayValue('Refrigerator')).toBeInTheDocument()
-  })
+  it('starts empty and asks for a device', () => {
+    render(<App />);
+    expect(screen.getByText(/no loads yet/i)).toBeInTheDocument();
+    expect(screen.getByText(/add a device to size the system/i)).toBeInTheDocument();
+  });
 
-  it('switches to products tab when clicked', async () => {
-    const user = userEvent.setup()
-    render(<App />)
-    
-    const productsTab = screen.getByText('Products')
-    await user.click(productsTab)
-    
-    expect(screen.getByText('Product Recommendations')).toBeInTheDocument()
-    expect(screen.getByText('Budget Tier')).toBeInTheDocument()
-  })
+  it('sizes a bank end to end from a device the user enters', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
 
-  it('switches to product lookup tab when clicked', async () => {
-    const user = userEvent.setup()
-    render(<App />)
-    
-    const lookupTab = screen.getByRole('button', { name: 'Product Lookup' })
-    await user.click(lookupTab)
-    
-    expect(screen.getByPlaceholderText(/Search for products/)).toBeInTheDocument()
-  })
+    await user.type(screen.getByLabelText('Device name'), 'Fridge');
+    await setNumber(/watts for fridge/i, '120');
+    await setNumber(/hours per day for fridge/i, '10');
 
-  it('switches to settings tab when clicked', async () => {
-    const user = userEvent.setup()
-    render(<App />)
-    
-    const settingsTab = screen.getByText('Settings')
-    await user.click(settingsTab)
-    
-    expect(screen.getByText('System Settings')).toBeInTheDocument()
-    expect(screen.getByText('Battery Type')).toBeInTheDocument()
-  })
+    // 120W for 10h = 1200Wh = 100Ah at 12V. Two days at 80% DoD = 250Ah.
+    const sizing = within(screen.getByRole('region', { name: 'Sizing' }));
+    expect(sizing.getByText('250 Ah')).toBeInTheDocument();
+    const offBattery = sizing.getByText('Off the battery').parentElement!;
+    expect(within(offBattery).getByText(/1\.2 kWh.*100 Ah/)).toBeInTheDocument();
+  });
 
-  it('updates calculations when devices are modified', async () => {
-    const user = userEvent.setup()
-    render(<App />)
-    
-    // Find the watts input for LED Lights and change it
-    const wattsInputs = screen.getAllByDisplayValue('20')
-    const ledWattsInput = wattsInputs[0] // First one should be LED Lights
-    
-    await user.clear(ledWattsInput)
-    await user.type(ledWattsInput, '50')
-    
-    // The daily usage should update
-    expect(screen.getByText('300 Wh/day')).toBeInTheDocument() // 50W * 6h = 300Wh
-  })
+  it('adds a preset with its duty cycle already set', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: /from a preset/i }));
+    await user.click(screen.getByRole('button', { name: /compressor fridge/i }));
 
-  it('shows correct inverter requirements based on AC devices', () => {
-    render(<App />)
-    
-    // Should show inverter requirements since we have AC devices (Laptop, Refrigerator)
-    expect(screen.getByText('Inverter')).toBeInTheDocument()
-    // Should not show "Not needed" since we have AC devices
-    expect(screen.queryByText('Not needed')).not.toBeInTheDocument()
-  })
+    expect(screen.getByLabelText(/duty cycle percent for compressor fridge/i)).toHaveValue(35);
 
-  it('updates default voltage and reflects in new devices', async () => {
-    const user = userEvent.setup()
-    render(<App />)
-    
-    // Change default voltage
-    const defaultVoltageSelect = screen.getByDisplayValue('12V DC')
-    await user.selectOptions(defaultVoltageSelect, '24')
-    
-    // Wait for state update and check that voltage input reflects the change
-    await user.click(screen.getByPlaceholderText('Device name'))
-    const voltageInput = screen.getByPlaceholderText('Volts')
-    expect(voltageInput).toHaveValue(24)
-  })
+    // 45W x 24h x 0.35 = 378Wh, shown on the row and again in the day's total.
+    const row = screen.getByDisplayValue('Compressor fridge').closest('tr')!;
+    expect(within(row).getByText('378 Wh')).toBeInTheDocument();
+  });
 
-  it('shows footer information', () => {
-    render(<App />)
-    
-    expect(screen.getByText('Power Calculator - Design your perfect off-grid power system')).toBeInTheDocument()
-    expect(screen.getByText('Get personalized recommendations for boats, vans, and off-grid homes')).toBeInTheDocument()
-  })
-})
+  it('reports no inverter needed until an AC load exists', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
+    await setNumber(/watts for this device/i, '100');
+
+    expect(screen.getByText(/not needed - no ac loads/i)).toBeInTheDocument();
+
+    await user.selectOptions(screen.getByLabelText(/supply type/i), 'AC');
+    expect(screen.queryByText(/not needed - no ac loads/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/inverter continuous/i)).toBeInTheDocument();
+  });
+
+  it('recalculates when the system voltage changes', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
+    await setNumber(/watts for this device/i, '120');
+    await setNumber(/hours per day for this device/i, '10');
+
+    expect(screen.getByText('250 Ah')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '24V' }));
+    expect(screen.getByText('125 Ah')).toBeInTheDocument();
+  });
+
+  it('drops depth of discharge when the chemistry changes', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    expect(screen.getByLabelText(/depth of discharge percent/i)).toHaveValue(80);
+    await user.selectOptions(screen.getByLabelText(/battery chemistry/i), 'AGM');
+    expect(screen.getByLabelText(/depth of discharge percent/i)).toHaveValue(50);
+  });
+
+  it('removes a device', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
+    await user.click(screen.getByRole('button', { name: /remove this device/i }));
+    expect(screen.getByText(/no loads yet/i)).toBeInTheDocument();
+  });
+
+  it('duplicates a device', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
+    await user.type(screen.getByLabelText('Device name'), 'Light');
+    await user.click(screen.getByRole('button', { name: /duplicate light/i }));
+
+    const rows = screen.getAllByLabelText('Device name');
+    expect(rows).toHaveLength(2);
+    expect(rows[1]).toHaveValue('Light');
+  });
+
+  it('survives a reload by way of local storage', async () => {
+    const user = userEvent.setup();
+    const { unmount } = render(<App />);
+    await addDevice(user);
+    await user.type(screen.getByLabelText('Device name'), 'Heater');
+    unmount();
+
+    render(<App />);
+    expect(screen.getByLabelText('Device name')).toHaveValue('Heater');
+  });
+
+  it('keeps the total row in step with the loads', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
+    await setNumber(/watts for this device/i, '50');
+    await setNumber(/hours per day for this device/i, '4');
+
+    const footer = screen.getByText(/at the loads, before inverter losses/i).closest('tr')!;
+    expect(within(footer).getByText('200 Wh')).toBeInTheDocument();
+  });
+});

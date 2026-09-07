@@ -1,235 +1,154 @@
-import React from 'react';
-import { Settings } from '../types';
+import { NumberField } from './NumberField';
+import { CHEMISTRY_PROFILES, profileFor } from '../domain/chemistry';
+import type { Chemistry, Settings, SystemVoltage } from '../domain/types';
 
 interface Props {
   settings: Settings;
-  onSettingsChange: (settings: Settings) => void;
+  onChange: (patch: Partial<Settings>) => void;
 }
 
-export default function SettingsPanel({ settings, onSettingsChange }: Props) {
-  const updateSetting = (key: keyof Settings, value: number | string) => {
-    onSettingsChange({ ...settings, [key]: value });
-  };
+const VOLTAGES: SystemVoltage[] = [12, 24, 48];
 
-  const handleBatteryTypeChange = (batteryType: 'LiFePO4' | 'Lead Acid' | 'AGM' | 'Gel') => {
-    let newDepthOfDischarge: number;
-    let newBatteryEfficiency: number;
-    
-    switch (batteryType) {
-      case 'LiFePO4':
-        newDepthOfDischarge = 0.9; // 90% DoD for LiFePO4
-        newBatteryEfficiency = 0.98;
-        break;
-      case 'Lead Acid':
-        newDepthOfDischarge = 0.5; // 50% DoD for Lead Acid
-        newBatteryEfficiency = 0.85;
-        break;
-      case 'AGM':
-        newDepthOfDischarge = 0.7; // 70% DoD for AGM
-        newBatteryEfficiency = 0.9;
-        break;
-      case 'Gel':
-        newDepthOfDischarge = 0.7; // 70% DoD for Gel
-        newBatteryEfficiency = 0.9;
-        break;
-      default:
-        newDepthOfDischarge = 0.8;
-        newBatteryEfficiency = 0.95;
-    }
-    
-    onSettingsChange({
-      ...settings,
-      batteryType,
-      depthOfDischarge: newDepthOfDischarge,
-      batteryEfficiency: newBatteryEfficiency
-    });
-  };
+export function SettingsPanel({ settings, onChange }: Props) {
+  const profile = profileFor(settings.chemistry);
 
   return (
-    <div className="bg-white p-6 rounded-lg shadow-md">
-      <h2 className="text-xl font-semibold mb-4">System Settings</h2>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <section className="panel p-4" aria-label="System settings">
+      <h2 className="text-sm font-semibold m-0">System</h2>
+      <p className="text-xs m-0 mt-0.5 mb-4" style={{ color: 'var(--ink-soft)' }}>
+        The assumptions the sizing rests on. Change these before you trust the numbers.
+      </p>
 
+      <div className="grid gap-4">
+        <div>
+          <span className="label">Battery voltage</span>
+          <div className="flex gap-1.5" role="group" aria-label="Battery voltage">
+            {VOLTAGES.map(v => (
+              <button
+                key={v}
+                className="btn flex-1 tabular"
+                aria-pressed={settings.systemVoltage === v}
+                style={
+                  settings.systemVoltage === v
+                    ? { background: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' }
+                    : undefined
+                }
+                onClick={() => onChange({ systemVoltage: v })}
+              >
+                {v}V
+              </button>
+            ))}
+          </div>
+        </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            System Voltage (DC)
+          <label className="label" htmlFor="chemistry">
+            Battery chemistry
           </label>
           <select
-            value={settings.systemVoltage}
-            onChange={(e) => updateSetting('systemVoltage', Number(e.target.value) as 12 | 24 | 48)}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+            id="chemistry"
+            className="field"
+            value={settings.chemistry}
+            onChange={e => onChange({ chemistry: e.target.value as Chemistry })}
           >
-            <option value={12}>12V</option>
-            <option value={24}>24V</option>
-            <option value={48}>48V</option>
+            {Object.entries(CHEMISTRY_PROFILES).map(([key, p]) => (
+              <option key={key} value={key}>
+                {p.label}
+              </option>
+            ))}
           </select>
-          <p className="text-xs text-gray-500 mt-1">
-            Battery system voltage
+          <p className="text-xs m-0 mt-1.5" style={{ color: 'var(--ink-faint)' }}>
+            {profile.note}
           </p>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Display Unit
-          </label>
-          <select
-            value={settings.displayUnit}
-            onChange={(e) => updateSetting('displayUnit', e.target.value as 'Wh' | 'Ah')}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="Wh">Watt Hours (Wh)</option>
-            <option value="Ah">Amp Hours (Ah)</option>
-          </select>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label className="label" htmlFor="dod">
+              Depth of discharge
+            </label>
+            <NumberField
+              id="dod"
+              value={Math.round(settings.depthOfDischarge * 100)}
+              min={10}
+              max={100}
+              step={5}
+              suffix="%"
+              aria-label="Depth of discharge percent"
+              onChange={percent => onChange({ depthOfDischarge: percent / 100 })}
+            />
+          </div>
+
+          <div>
+            <label className="label" htmlFor="autonomy">
+              Days of autonomy
+            </label>
+            <NumberField
+              id="autonomy"
+              value={settings.daysOfAutonomy}
+              min={0.5}
+              max={14}
+              step={0.5}
+              suffix="days"
+              aria-label="Days of autonomy"
+              onChange={daysOfAutonomy => onChange({ daysOfAutonomy })}
+            />
+          </div>
+
+          <div>
+            <label className="label" htmlFor="sun">
+              Peak sun hours
+            </label>
+            <NumberField
+              id="sun"
+              value={settings.peakSunHours}
+              min={0.1}
+              max={12}
+              step={0.1}
+              suffix="h"
+              aria-label="Peak sun hours"
+              onChange={peakSunHours => onChange({ peakSunHours })}
+            />
+          </div>
+
+          <div>
+            <label className="label" htmlFor="derate">
+              Array derate
+            </label>
+            <NumberField
+              id="derate"
+              value={Math.round(settings.solarDerate * 100)}
+              min={30}
+              max={100}
+              step={5}
+              suffix="%"
+              aria-label="Array derate percent"
+              onChange={percent => onChange({ solarDerate: percent / 100 })}
+            />
+          </div>
+
+          <div>
+            <label className="label" htmlFor="inverter-eff">
+              Inverter efficiency
+            </label>
+            <NumberField
+              id="inverter-eff"
+              value={Math.round(settings.inverterEfficiency * 100)}
+              min={50}
+              max={100}
+              step={1}
+              suffix="%"
+              aria-label="Inverter efficiency percent"
+              onChange={percent => onChange({ inverterEfficiency: percent / 100 })}
+            />
+          </div>
         </div>
 
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Currency
-          </label>
-          <select
-            value={settings.currency}
-            onChange={(e) => updateSetting('currency', e.target.value as 'GBP' | 'USD' | 'EUR')}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="GBP">British Pounds (£)</option>
-            <option value="USD">US Dollars ($)</option>
-            <option value="EUR">Euros (€)</option>
-          </select>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Battery Type
-          </label>
-          <select
-            value={settings.batteryType}
-            onChange={(e) => handleBatteryTypeChange(e.target.value as 'LiFePO4' | 'Lead Acid' | 'AGM' | 'Gel')}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <option value="LiFePO4">LiFePO4 (Lithium) - 90% DoD</option>
-            <option value="Lead Acid">Lead Acid - 50% DoD</option>
-            <option value="AGM">AGM - 70% DoD</option>
-            <option value="Gel">Gel - 70% DoD</option>
-          </select>
-          <p className="text-xs text-gray-500 mt-1">
-            Depth of discharge automatically set based on battery type
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Days of Autonomy
-          </label>
-          <input
-            type="number"
-            min="1"
-            max="7"
-            step="0.5"
-            value={settings.daysOfAutonomy}
-            onChange={(e) => {
-              const value = Number(e.target.value);
-              // Ensure the value is within reasonable bounds to handle test edge cases
-              if (value >= 1 && value <= 7) {
-                updateSetting('daysOfAutonomy', value);
-              }
-            }}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            How many days without charging
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Depth of Discharge (%) 
-            <span className="text-xs text-blue-600 ml-1">Auto-set by battery type</span>
-          </label>
-          <input
-            type="number"
-            min="20"
-            max="95"
-            step="5"
-            value={Math.round(settings.depthOfDischarge * 100)}
-            onChange={(e) => {
-              const value = Number(e.target.value);
-              // Ensure the value is within reasonable bounds to handle test edge cases
-              if (value >= 20 && value <= 95) {
-                updateSetting('depthOfDischarge', value / 100);
-              }
-            }}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Automatically set based on battery type (can be manually overridden)
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Peak Sun Hours
-          </label>
-          <input
-            type="number"
-            min="2"
-            max="8"
-            step="0.5"
-            value={settings.peakSunHours}
-            onChange={(e) => updateSetting('peakSunHours', Number(e.target.value))}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          <p className="text-xs text-gray-500 mt-1">
-            Average daily peak sun hours in your area
-          </p>
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Battery Efficiency (%)
-          </label>
-          <input
-            type="number"
-            min="80"
-            max="98"
-            step="1"
-            value={settings.batteryEfficiency * 100}
-            onChange={(e) => updateSetting('batteryEfficiency', Number(e.target.value) / 100)}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Inverter Efficiency (%)
-          </label>
-          <input
-            type="number"
-            min="80"
-            max="95"
-            step="1"
-            value={settings.inverterEfficiency * 100}
-            onChange={(e) => updateSetting('inverterEfficiency', Number(e.target.value) / 100)}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Solar Efficiency (%)
-          </label>
-          <input
-            type="number"
-            min="70"
-            max="90"
-            step="1"
-            value={settings.solarEfficiency * 100}
-            onChange={(e) => updateSetting('solarEfficiency', Number(e.target.value) / 100)}
-            className="w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-        </div>
+        <p className="text-xs m-0 pt-1" style={{ color: 'var(--ink-faint)' }}>
+          Peak sun hours should be the worst month you intend to stay out in, not the yearly
+          average. In the UK that is nearer 1 hour in December than the 4 you get in June.
+        </p>
       </div>
-    </div>
+    </section>
   );
 }
