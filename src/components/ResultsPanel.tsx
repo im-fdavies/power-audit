@@ -8,48 +8,45 @@ interface Props {
 function Readout({
   label,
   value,
-  detail,
-  accent,
+  note,
+  cable,
 }: {
   label: string;
   value: string;
-  detail: string;
-  accent: 'battery' | 'accent';
+  note: string;
+  cable: string;
 }) {
   return (
-    <div
-      className="p-3.5 rounded-lg"
-      style={{
-        background: accent === 'battery' ? 'var(--battery-soft)' : 'var(--accent-soft)',
-        border: '1px solid var(--line)',
-      }}
-    >
-      <div className="text-xs font-medium" style={{ color: 'var(--ink-soft)' }}>
-        {label}
-      </div>
-      <div
-        className="tabular text-2xl font-semibold mt-1 leading-none"
-        style={{ color: accent === 'battery' ? 'var(--battery)' : 'var(--accent)' }}
-      >
-        {value}
-      </div>
-      <div className="text-xs mt-1.5" style={{ color: 'var(--ink-soft)' }}>
-        {detail}
-      </div>
+    <div className="readout" style={{ '--cable': cable } as React.CSSProperties}>
+      <div className="legend">{label}</div>
+      <div className="readout-value">{value}</div>
+      <p className="readout-note">{note}</p>
     </div>
   );
 }
 
-function Line({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
+function Line({
+  label,
+  value,
+  aside,
+  muted,
+}: {
+  label: string;
+  value: string;
+  aside?: string;
+  muted?: boolean;
+}) {
   return (
-    <div
-      className="flex justify-between items-baseline gap-4 py-1.5"
-      style={{ borderTop: '1px solid var(--line)' }}
-    >
-      <span className="text-xs" style={{ color: muted ? 'var(--ink-faint)' : 'var(--ink-soft)' }}>
-        {label}
+    <div className="row-rule flex justify-between items-baseline gap-4 py-1.5">
+      <span style={{ color: muted ? 'var(--legend-dim)' : 'var(--legend)' }}>{label}</span>
+      <span className="flex items-baseline gap-3 whitespace-nowrap">
+        <span className="tabular">{value}</span>
+        {aside && (
+          <span className="tabular" style={{ color: 'var(--legend-dim)' }}>
+            {aside}
+          </span>
+        )}
       </span>
-      <span className="tabular text-sm whitespace-nowrap">{value}</span>
     </div>
   );
 }
@@ -57,37 +54,29 @@ function Line({ label, value, muted }: { label: string; value: string; muted?: b
 function WarningNote({ warning }: { warning: Warning }) {
   const tone =
     warning.level === 'problem'
-      ? { fg: 'var(--problem)', bg: 'var(--problem-soft)' }
+      ? 'note note-problem'
       : warning.level === 'caution'
-        ? { fg: 'var(--caution)', bg: 'var(--caution-soft)' }
-        : { fg: 'var(--ink-soft)', bg: 'var(--panel-sunk)' };
-
-  return (
-    <li
-      className="text-xs px-3 py-2 rounded-md list-none"
-      style={{ background: tone.bg, color: tone.fg, border: '1px solid var(--line)' }}
-    >
-      {warning.message}
-    </li>
-  );
+        ? 'note note-caution'
+        : 'note';
+  return <li className={tone}>{warning.message}</li>;
 }
 
 export function ResultsPanel({ result }: Props) {
   const hasLoad = result.totalDailyWh > 0;
 
   return (
-    <section className="panel p-4" aria-label="Sizing">
-      <h2 className="text-sm font-semibold m-0">Sizing</h2>
-      <p className="text-xs m-0 mt-0.5 mb-4" style={{ color: 'var(--ink-soft)' }}>
-        Minimums. Round up to what you can actually buy.
-      </p>
+    <section className="panel" aria-label="Sizing">
+      <header className="panel-head px-4 py-3">
+        <h2 className="panel-title">Sizing</h2>
+        <p className="panel-note">Minimums. Round up to what you can actually buy.</p>
+      </header>
 
-      <div className="grid gap-2.5">
+      <div className="px-4 py-4 grid gap-5">
         <Readout
-          accent="battery"
+          cable="var(--bank)"
           label="Battery bank"
           value={hasLoad ? formatAh(roundUpTo(result.batteryBankAh, 5)) : '-'}
-          detail={
+          note={
             hasLoad
               ? `${formatWh(result.batteryBankWh)} nominal, of which ${formatAh(
                   result.usableAhRequired,
@@ -96,10 +85,10 @@ export function ResultsPanel({ result }: Props) {
           }
         />
         <Readout
-          accent="accent"
+          cable="var(--solar)"
           label="Solar array"
           value={hasLoad ? formatWatts(roundUpTo(result.solarArrayWatts, 10)) : '-'}
-          detail={
+          note={
             hasLoad
               ? `Replaces ${formatWh(result.dailyRechargeWh)} a day, losses included`
               : 'Add a load to size the array'
@@ -107,23 +96,18 @@ export function ResultsPanel({ result }: Props) {
         />
       </div>
 
-      <div className="mt-4">
-        <h3 className="text-xs font-semibold m-0 mb-1" style={{ color: 'var(--ink-soft)' }}>
-          Daily energy
-        </h3>
+      <div className="px-4 pb-4">
+        <h3 className="legend m-0 mb-1">Daily energy</h3>
         <Line label="DC loads" value={formatWh(result.dcLoadWh)} />
         <Line label="AC loads" value={formatWh(result.acLoadWh)} />
         <Line label="Inverter losses" value={formatWh(result.inverterLossWh)} muted />
         <Line
           label="Off the battery"
-          value={`${formatWh(result.totalDailyWh)}  ·  ${formatAh(result.totalDailyAh)}`}
+          value={formatWh(result.totalDailyWh)}
+          aside={formatAh(result.totalDailyAh)}
         />
-      </div>
 
-      <div className="mt-4">
-        <h3 className="text-xs font-semibold m-0 mb-1" style={{ color: 'var(--ink-soft)' }}>
-          Kit ratings
-        </h3>
+        <h3 className="legend m-0 mt-4 mb-1">Kit ratings</h3>
         {result.inverterContinuousWatts > 0 ? (
           <>
             <Line
@@ -144,15 +128,15 @@ export function ResultsPanel({ result }: Props) {
           value={hasLoad ? formatAmps(result.maxChargeCurrentA) : '-'}
           muted
         />
-      </div>
 
-      {result.warnings.length > 0 && (
-        <ul className="grid gap-1.5 mt-4 p-0 m-0">
-          {result.warnings.map(w => (
-            <WarningNote key={w.message} warning={w} />
-          ))}
-        </ul>
-      )}
+        {result.warnings.length > 0 && (
+          <ul className="grid gap-2.5 mt-4 p-0 m-0">
+            {result.warnings.map(w => (
+              <WarningNote key={w.message} warning={w} />
+            ))}
+          </ul>
+        )}
+      </div>
     </section>
   );
 }

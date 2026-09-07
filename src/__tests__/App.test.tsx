@@ -37,7 +37,8 @@ describe('App', () => {
     const sizing = within(screen.getByRole('region', { name: 'Sizing' }));
     expect(sizing.getByText('250 Ah')).toBeInTheDocument();
     const offBattery = sizing.getByText('Off the battery').parentElement!;
-    expect(within(offBattery).getByText(/1\.2 kWh.*100 Ah/)).toBeInTheDocument();
+    expect(within(offBattery).getByText('1.2 kWh')).toBeInTheDocument();
+    expect(within(offBattery).getByText('100 Ah')).toBeInTheDocument();
   });
 
   it('adds a preset with its duty cycle already set', async () => {
@@ -210,5 +211,62 @@ describe('tooltips', () => {
       expect(screen.getByRole('tooltip').textContent).toBeTruthy();
       await user.unhover(screen.getByText(heading));
     }
+  });
+});
+
+describe('surge only applies to AC', () => {
+  beforeEach(() => localStorage.clear());
+
+  it('disables surge on a DC row and enables it on AC', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
+
+    expect(screen.getByLabelText(/surge factor for this device/i)).toBeDisabled();
+
+    await user.selectOptions(screen.getByLabelText(/supply type/i), 'AC');
+    expect(screen.getByLabelText(/surge factor for this device/i)).toBeEnabled();
+
+    await user.selectOptions(screen.getByLabelText(/supply type/i), 'DC');
+    expect(screen.getByLabelText(/surge factor for this device/i)).toBeDisabled();
+  });
+
+  it('says why the DC surge field is disabled', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
+
+    await user.hover(screen.getByLabelText(/surge factor for this device/i));
+    expect(screen.getByRole('tooltip')).toHaveTextContent(/never goes through the inverter/i);
+  });
+
+  it('keeps the surge value when a row moves back to AC', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await user.click(screen.getByRole('button', { name: /from a preset/i }));
+    await user.click(screen.getByRole('button', { name: /water pump/i }));
+
+    const supply = screen.getByLabelText(/supply type for water pump/i);
+    await user.selectOptions(supply, 'AC');
+    expect(screen.getByLabelText(/surge factor for water pump/i)).toHaveValue(2);
+  });
+
+  it('still sizes the inverter from an AC row surge', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await addDevice(user);
+    await user.selectOptions(screen.getByLabelText(/supply type/i), 'AC');
+
+    const watts = screen.getByLabelText(/watts for this device/i);
+    await user.clear(watts);
+    await user.type(watts, '500');
+    const surge = screen.getByLabelText(/surge factor for this device/i);
+    await user.clear(surge);
+    await user.type(surge, '3');
+
+    // 500W surging to 3x, with nothing else running.
+    const sizing = within(screen.getByRole('region', { name: 'Sizing' }));
+    const surgeRow = sizing.getByText('Inverter surge').parentElement!;
+    expect(within(surgeRow).getByText('1.5 kW')).toBeInTheDocument();
   });
 });

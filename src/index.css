@@ -1,49 +1,46 @@
 @import 'tailwindcss';
 
 /*
-  Tokens live on :root so light is the base and dark only overrides them.
-  The palette is deliberately warm - a calculator for boats and vans should not
-  feel like a bank dashboard.
+  The reference is a marine electrical panel - anodised blue-grey face,
+  screen-printed condensed legends, and colour-coded cable runs - rather than a
+  web dashboard. Colour is carried almost entirely by 3px rules standing in for
+  cable, so nothing needs a pastel fill to say what it is.
 */
 :root {
-  --paper: #f7f5f2;
+  --hull: #eceef1;
   --panel: #ffffff;
-  --panel-sunk: #f1eeea;
-  --line: #e2ded8;
-  --line-strong: #cdc7be;
-  --ink: #17191d;
-  --ink-soft: #5b6169;
-  --ink-faint: #8b9199;
-  --accent: #b4530a;
-  --accent-soft: #fdf0e3;
-  --battery: #0f6e5c;
-  --battery-soft: #e6f2ef;
+  --inset: #f3f5f7;
+  --rule: #dcdfe4;
+  --rule-strong: #b6bcc5;
+  --face: #171c23;
+  --legend: #576170;
+  --legend-dim: #838c99;
+  --solar: #9c5f08;
+  --bank: #15654f;
+  --signal: #a2352b;
   --caution: #8a5a06;
-  --caution-soft: #fdf4e2;
-  --problem: #a12a20;
-  --problem-soft: #fbeceb;
-  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', Menlo, monospace;
+
+  --type-sans: 'Barlow', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --type-condensed: 'Barlow Condensed', 'Barlow', ui-sans-serif, system-ui, sans-serif;
+  --type-mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
   color-scheme: light;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --paper: #101215;
-    --panel: #171a1f;
-    --panel-sunk: #1e2229;
-    --line: #282d35;
-    --line-strong: #3a414b;
-    --ink: #e9e6e1;
-    --ink-soft: #9aa1ab;
-    --ink-faint: #6b727c;
-    --accent: #f0954a;
-    --accent-soft: #2a1d12;
-    --battery: #4fbfa4;
-    --battery-soft: #12241f;
-    --caution: #e0a94a;
-    --caution-soft: #2a2113;
-    --problem: #e8837a;
-    --problem-soft: #2b1917;
+    --hull: #12171d;
+    --panel: #1a2028;
+    --inset: #212832;
+    --rule: #2c3541;
+    --rule-strong: #414d5c;
+    --face: #e5eaf0;
+    --legend: #8c99a8;
+    --legend-dim: #67717e;
+    --solar: #e5a247;
+    --bank: #4fae90;
+    --signal: #dd6d62;
+    --caution: #d9a441;
     color-scheme: dark;
   }
 }
@@ -54,49 +51,147 @@
 
 body {
   margin: 0;
-  background: var(--paper);
-  color: var(--ink);
-  font-family: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  background: var(--hull);
+  color: var(--face);
+  font-family: var(--type-sans);
+  font-size: 0.875rem;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
 }
 
-/* Numbers should line up in columns and never jitter as they recalculate. */
+/* ---- masthead ---------------------------------------------------------- */
+
+.masthead {
+  background: var(--panel);
+  border-bottom: 1px solid var(--rule);
+}
+
+.masthead-title {
+  font-family: var(--type-condensed);
+  font-weight: 700;
+  font-size: clamp(2.25rem, 6vw, 3.25rem);
+  line-height: 0.92;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+/* The one device repeated across the page: a cable run marking what matters. */
+.cable {
+  display: block;
+  width: 3.5rem;
+  height: 3px;
+  background: var(--solar);
+  margin: 0.6rem 0 0.7rem;
+}
+
+.masthead-standfirst {
+  margin: 0;
+  max-width: 54ch;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+  color: var(--legend);
+}
+
+/* ---- panels ------------------------------------------------------------ */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--rule);
+  border-radius: 4px;
+}
+
+.panel-head {
+  border-bottom: 1px solid var(--rule);
+}
+
+.panel-title {
+  font-family: var(--type-condensed);
+  font-weight: 600;
+  font-size: 1.125rem;
+  letter-spacing: 0.005em;
+  margin: 0;
+}
+
+.panel-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--legend);
+}
+
+.legend {
+  font-family: var(--type-condensed);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: 0.01em;
+  color: var(--legend);
+}
+
+/* ---- the answers ------------------------------------------------------- */
+
+.readout {
+  border-left: 3px solid var(--cable, var(--rule-strong));
+  padding-left: 0.9rem;
+}
+
+.readout-value {
+  font-family: var(--type-mono);
+  font-weight: 500;
+  font-size: clamp(2rem, 5vw, 2.6rem);
+  line-height: 1;
+  letter-spacing: -0.03em;
+  margin: 0.15rem 0 0.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.readout-note {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--legend);
+  max-width: 30ch;
+}
+
 .tabular {
-  font-family: var(--font-mono);
+  font-family: var(--type-mono);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
 }
 
-.panel {
-  background: var(--panel);
-  border: 1px solid var(--line);
-  border-radius: 10px;
-}
+/* ---- controls ---------------------------------------------------------- */
 
 .field {
   width: 100%;
-  background: var(--panel);
-  border: 1px solid var(--line-strong);
-  border-radius: 6px;
-  color: var(--ink);
+  background: var(--inset);
+  border: 1px solid var(--rule);
+  border-radius: 3px;
+  color: var(--face);
   padding: 0.4rem 0.55rem;
   font-size: 0.875rem;
-  font-family: inherit;
+  font-family: var(--type-sans);
+}
+
+.field:hover:not(:disabled) {
+  border-color: var(--rule-strong);
 }
 
 .field:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--solar);
   outline-offset: 1px;
-  border-color: var(--accent);
+  border-color: var(--solar);
+}
+
+.field:disabled {
+  opacity: 0.38;
+  cursor: not-allowed;
 }
 
 .field-num {
-  font-family: var(--font-mono);
+  font-family: var(--type-mono);
   font-variant-numeric: tabular-nums;
   text-align: right;
 }
 
-/* Strip the spinners - they are a hit target that only ever gets clicked by accident. */
+/* Spinners are a hit target that only ever gets clicked by accident. */
 .field-num::-webkit-outer-spin-button,
 .field-num::-webkit-inner-spin-button {
   appearance: none;
@@ -107,53 +202,119 @@ body {
 }
 
 .btn {
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--rule-strong);
   background: var(--panel);
-  color: var(--ink);
-  border-radius: 6px;
-  padding: 0.4rem 0.7rem;
-  font-size: 0.8125rem;
-  font-family: inherit;
+  color: var(--face);
+  border-radius: 3px;
+  padding: 0.38rem 0.7rem;
+  font-family: var(--type-condensed);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: 0.01em;
   cursor: pointer;
 }
 
 .btn:hover {
-  background: var(--panel-sunk);
+  background: var(--inset);
+  border-color: var(--face);
 }
 
 .btn:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--solar);
   outline-offset: 1px;
 }
 
 .btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-  font-weight: 500;
+  background: var(--solar);
+  border-color: var(--solar);
+  color: var(--hull);
 }
 
 .btn-primary:hover {
-  filter: brightness(1.08);
-  background: var(--accent);
+  background: var(--solar);
+  border-color: var(--solar);
+  filter: brightness(1.1);
 }
 
-.label {
-  display: block;
-  font-size: 0.75rem;
-  font-weight: 500;
-  color: var(--ink-soft);
-  margin-bottom: 0.25rem;
+/* Findable, but never hit by accident: reads as text until you are on it. */
+.btn-quiet {
+  border: 1px solid transparent;
+  background: none;
+  color: var(--legend-dim);
+  border-radius: 3px;
+  padding: 0.35rem 0.6rem;
+  font-family: var(--type-condensed);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  cursor: pointer;
+  white-space: nowrap;
 }
+
+.btn-quiet:hover {
+  color: var(--signal);
+  border-color: var(--rule-strong);
+}
+
+.btn-quiet:focus-visible {
+  outline: 2px solid var(--solar);
+  outline-offset: 1px;
+}
+
+.control-label {
+  display: block;
+  font-family: var(--type-condensed);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  color: var(--legend);
+  margin-bottom: 0.2rem;
+}
+
+/* ---- data table -------------------------------------------------------- */
+
+.col-head {
+  font-family: var(--type-condensed);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  letter-spacing: 0.01em;
+  color: var(--legend);
+  white-space: nowrap;
+}
+
+.row-rule {
+  border-top: 1px solid var(--rule);
+}
+
+/* ---- notes ------------------------------------------------------------- */
+
+.note {
+  border-left: 3px solid var(--cable, var(--rule-strong));
+  padding: 0.1rem 0 0.1rem 0.7rem;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--legend);
+  list-style: none;
+}
+
+.note-problem {
+  --cable: var(--signal);
+  color: var(--signal);
+}
+
+.note-caution {
+  --cable: var(--caution);
+  color: var(--caution);
+}
+
+/* ---- tooltips ---------------------------------------------------------- */
 
 .tooltip-trigger {
-  text-decoration: underline dotted var(--line-strong);
+  text-decoration: underline dotted var(--rule-strong);
   text-underline-offset: 3px;
   cursor: help;
 }
 
 .tooltip-trigger:focus-visible {
-  outline: 2px solid var(--accent);
+  outline: 2px solid var(--solar);
   outline-offset: 2px;
   border-radius: 2px;
 }
@@ -162,41 +323,37 @@ body {
   position: fixed;
   z-index: 50;
   transform: translateX(-50%);
-  max-width: 17rem;
+  max-width: 18rem;
   padding: 0.5rem 0.65rem;
-  border-radius: 6px;
-  background: var(--ink);
-  color: var(--paper);
-  font-size: 0.75rem;
+  border-radius: 3px;
+  border: 1px solid var(--rule-strong);
+  background: var(--face);
+  color: var(--hull);
+  font-family: var(--type-sans);
+  font-size: 0.8125rem;
   line-height: 1.45;
   font-weight: 400;
   text-align: left;
+  text-decoration: none;
   pointer-events: none;
-  box-shadow: 0 8px 24px rgb(0 0 0 / 0.22);
 }
 
-/*
-  A destructive action that should be findable but never hit by accident, so it
-  reads as text until you are on it.
-*/
-.btn-quiet {
-  border: 1px solid transparent;
-  background: none;
-  color: var(--ink-faint);
-  border-radius: 6px;
-  padding: 0.35rem 0.6rem;
-  font-size: 0.75rem;
-  font-family: inherit;
-  cursor: pointer;
-  white-space: nowrap;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
-.btn-quiet:hover {
-  color: var(--problem);
-  border-color: var(--line-strong);
+/* A tooltip wrapping a control rather than a run of text. */
+.tooltip-shell {
+  display: block;
 }
 
-.btn-quiet:focus-visible {
-  outline: 2px solid var(--accent);
-  outline-offset: 1px;
+.tooltip-shell:focus-visible {
+  outline: 2px solid var(--solar);
+  outline-offset: 2px;
+  border-radius: 3px;
 }

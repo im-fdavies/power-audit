@@ -17,12 +17,12 @@ function StartOver({ onReset }: { onReset: () => void }) {
 
   return (
     <span className="flex items-center gap-2 flex-wrap">
-      <span className="text-xs" style={{ color: 'var(--ink-soft)' }}>
+      <span style={{ color: 'var(--legend)', fontSize: '0.8125rem' }}>
         Clear every device and reset the system settings?
       </span>
       <button
         className="btn"
-        style={{ borderColor: 'var(--problem)', color: 'var(--problem)' }}
+        style={{ borderColor: 'var(--signal)', color: 'var(--signal)' }}
         onClick={() => {
           onReset();
           setConfirming(false);
@@ -42,15 +42,13 @@ export default function App() {
 
   return (
     <div className="min-h-screen">
-      <header
-        className="px-5 py-4"
-        style={{ borderBottom: '1px solid var(--line)', background: 'var(--panel)' }}
-      >
+      <header className="masthead px-5 pt-8 pb-6">
         <div className="max-w-6xl mx-auto">
-          <h1 className="text-base font-semibold m-0">Power Audit</h1>
-          <p className="text-xs m-0 mt-0.5" style={{ color: 'var(--ink-soft)' }}>
+          <h1 className="masthead-title">Power Audit</h1>
+          <span className="cable" />
+          <p className="masthead-standfirst">
             Size the battery bank, solar array, inverter and charge controller for a boat, van
-            or off-grid cabin.
+            or off-grid cabin, from what you actually run in a day.
           </p>
         </div>
       </header>
@@ -87,9 +85,12 @@ export default function App() {
       <footer className="max-w-6xl mx-auto px-5 pb-10">
         <div
           className="flex items-start justify-between gap-6 flex-wrap pt-4"
-          style={{ borderTop: '1px solid var(--line)' }}
+          style={{ borderTop: '1px solid var(--rule)' }}
         >
-          <p className="text-xs m-0 max-w-xl" style={{ color: 'var(--ink-faint)' }}>
+          <p
+            className="m-0"
+            style={{ color: 'var(--legend-dim)', fontSize: '0.8125rem', maxWidth: '62ch' }}
+          >
             A planning tool, not a design certificate. Have any installation that touches mains
             voltage, gas or a vessel's existing wiring signed off by a qualified electrician.
           </p>

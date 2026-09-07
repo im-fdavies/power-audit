@@ -7,6 +7,7 @@ interface Props {
   max?: number;
   step?: number;
   suffix?: string;
+  disabled?: boolean;
   'aria-label': string;
   id?: string;
 }
@@ -22,6 +23,7 @@ export function NumberField({
   max,
   step,
   suffix,
+  disabled = false,
   id,
   'aria-label': ariaLabel,
 }: Props) {
@@ -49,6 +51,7 @@ export function NumberField({
       min={min}
       max={max}
       step={step}
+      disabled={disabled}
       aria-label={ariaLabel}
       onChange={e => commit(e.target.value)}
       onBlur={() => setDraft(String(value))}
@@ -60,7 +63,7 @@ export function NumberField({
   return (
     <div className="flex items-center gap-1.5">
       {input}
-      <span className="text-xs shrink-0" style={{ color: 'var(--ink-faint)' }}>
+      <span className="text-xs shrink-0" style={{ color: 'var(--legend-dim)' }}>
         {suffix}
       </span>
     </div>

@@ -14,15 +14,17 @@ export function SettingsPanel({ settings, onChange }: Props) {
   const profile = profileFor(settings.chemistry);
 
   return (
-    <section className="panel p-4" aria-label="System settings">
-      <h2 className="text-sm font-semibold m-0">System</h2>
-      <p className="text-xs m-0 mt-0.5 mb-4" style={{ color: 'var(--ink-soft)' }}>
-        The assumptions the sizing rests on. Change these before you trust the numbers.
-      </p>
+    <section className="panel" aria-label="System settings">
+      <header className="panel-head px-4 py-3">
+        <h2 className="panel-title">System</h2>
+        <p className="panel-note">
+          The assumptions the sizing rests on. Change these before you trust the numbers.
+        </p>
+      </header>
 
-      <div className="grid gap-4">
+      <div className="px-4 py-4 grid gap-4">
         <div>
-          <span className="label">
+          <span className="control-label">
             <Tooltip label="The bank's nominal voltage. Doubling it halves the current for the same power, which means thinner cable and smaller losses - the usual reason to leave 12V behind.">
               Battery voltage
             </Tooltip>
@@ -35,7 +37,11 @@ export function SettingsPanel({ settings, onChange }: Props) {
                 aria-pressed={settings.systemVoltage === v}
                 style={
                   settings.systemVoltage === v
-                    ? { background: 'var(--accent)', borderColor: 'var(--accent)', color: '#fff' }
+                    ? {
+                        background: 'var(--solar)',
+                        borderColor: 'var(--solar)',
+                        color: 'var(--hull)',
+                      }
                     : undefined
                 }
                 onClick={() => onChange({ systemVoltage: v })}
@@ -47,7 +53,7 @@ export function SettingsPanel({ settings, onChange }: Props) {
         </div>
 
         <div>
-          <label className="label" htmlFor="chemistry">
+          <label className="control-label" htmlFor="chemistry">
             <Tooltip label="Sets how deeply the bank can be run, how much energy survives a charge and discharge, and how fast it can safely be charged.">
               Battery chemistry
             </Tooltip>
@@ -64,14 +70,14 @@ export function SettingsPanel({ settings, onChange }: Props) {
               </option>
             ))}
           </select>
-          <p className="text-xs m-0 mt-1.5" style={{ color: 'var(--ink-faint)' }}>
+          <p className="m-0 mt-1.5" style={{ color: 'var(--legend-dim)', fontSize: '0.8125rem' }}>
             {profile.note}
           </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
-            <label className="label" htmlFor="dod">
+            <label className="control-label" htmlFor="dod">
               <Tooltip label="How far down you are prepared to run the bank. Lead acid wants holding at 50%; LiFePO4 takes 80% without complaint. Going deeper buys a smaller bank at the cost of its life.">
                 Depth of discharge
               </Tooltip>
@@ -89,7 +95,7 @@ export function SettingsPanel({ settings, onChange }: Props) {
           </div>
 
           <div>
-            <label className="label" htmlFor="autonomy">
+            <label className="control-label" htmlFor="autonomy">
               <Tooltip label="How long the bank must carry the load with nothing charging it - the run of grey days you want to sit through without the engine or a generator.">
                 Days of autonomy
               </Tooltip>
@@ -107,7 +113,7 @@ export function SettingsPanel({ settings, onChange }: Props) {
           </div>
 
           <div>
-            <label className="label" htmlFor="sun">
+            <label className="control-label" htmlFor="sun">
               <Tooltip label="Equivalent hours of full-rated sun per day. Use the worst month you intend to be out in, not the annual average - that is the month the system has to survive.">
                 Peak sun hours
               </Tooltip>
@@ -125,7 +131,7 @@ export function SettingsPanel({ settings, onChange }: Props) {
           </div>
 
           <div>
-            <label className="label" htmlFor="derate">
+            <label className="control-label" htmlFor="derate">
               <Tooltip label="What the panels actually deliver once heat, dirt, shading, wiring losses and an imperfect angle have taken their cut. 75% is realistic; 100% is a laboratory.">
                 Array derate
               </Tooltip>
@@ -143,7 +149,7 @@ export function SettingsPanel({ settings, onChange }: Props) {
           </div>
 
           <div>
-            <label className="label" htmlFor="inverter-eff">
+            <label className="control-label" htmlFor="inverter-eff">
               <Tooltip label="How much of the DC energy survives conversion to AC. Applied only to AC loads - DC devices never touch the inverter.">
                 Inverter efficiency
               </Tooltip>
@@ -161,7 +167,10 @@ export function SettingsPanel({ settings, onChange }: Props) {
           </div>
         </div>
 
-        <p className="text-xs m-0 pt-1" style={{ color: 'var(--ink-faint)' }}>
+        <p
+          className="m-0 pt-1"
+          style={{ color: 'var(--legend-dim)', fontSize: '0.8125rem', maxWidth: '60ch' }}
+        >
           Peak sun hours should be the worst month you intend to stay out in, not the yearly
           average. In the UK that is nearer 1 hour in December than the 4 you get in June.
         </p>

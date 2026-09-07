@@ -36,7 +36,7 @@ const HEADINGS: { label: string; hint?: string; align?: 'right' }[] = [
   },
   {
     label: 'Surge x',
-    hint: 'Startup inrush as a multiple of running watts. Motors and compressors pull three to five times for a moment; electronics pull one. Only affects the inverter rating.',
+    hint: 'Startup inrush as a multiple of running watts. Motors and compressors pull three to five times for a moment; electronics pull one. Sets the inverter rating, so it applies to AC rows only.',
   },
   {
     label: 'Supply',
@@ -55,17 +55,12 @@ export function DeviceTable({ result, onAdd, onChange, onRemove, onDuplicate }: 
 
   return (
     <section className="panel overflow-hidden" aria-label="Loads">
-      <header
-        className="flex items-center justify-between gap-3 px-4 py-3"
-        style={{ borderBottom: '1px solid var(--line)' }}
-      >
+      <header className="panel-head flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-4 py-3">
         <div>
-          <h2 className="text-sm font-semibold m-0">Loads</h2>
-          <p className="text-xs m-0 mt-0.5" style={{ color: 'var(--ink-soft)' }}>
-            Everything that will draw from the bank on a normal day.
-          </p>
+          <h2 className="panel-title">Loads</h2>
+          <p className="panel-note">Everything that will draw from the bank on a normal day.</p>
         </div>
-        <div className="flex gap-2 relative">
+        <div className="flex gap-2 relative shrink-0">
           <button
             className="btn whitespace-nowrap"
             onClick={() => setPresetOpen(o => !o)}
@@ -78,10 +73,7 @@ export function DeviceTable({ result, onAdd, onChange, onRemove, onDuplicate }: 
           </button>
 
           {presetOpen && (
-            <div
-              className="panel absolute right-0 top-full mt-1 z-10 w-64 max-h-80 overflow-auto p-1"
-              style={{ boxShadow: '0 10px 30px rgb(0 0 0 / 0.14)' }}
-            >
+            <div className="panel absolute right-0 top-full mt-1 z-10 w-64 max-h-80 overflow-auto p-1">
               {DEVICE_PRESETS.map(preset => (
                 <button
                   key={preset.name}
@@ -92,7 +84,7 @@ export function DeviceTable({ result, onAdd, onChange, onRemove, onDuplicate }: 
                   }}
                 >
                   <span>{preset.name}</span>
-                  <span className="tabular text-xs" style={{ color: 'var(--ink-faint)' }}>
+                  <span className="tabular text-xs" style={{ color: 'var(--legend-dim)' }}>
                     {preset.watts}W {preset.currentType}
                   </span>
                 </button>
@@ -103,23 +95,25 @@ export function DeviceTable({ result, onAdd, onChange, onRemove, onDuplicate }: 
       </header>
 
       {result.loads.length === 0 ? (
-        <p className="px-4 py-10 text-center text-sm m-0" style={{ color: 'var(--ink-soft)' }}>
+        <p
+          className="px-4 py-12 text-center m-0 mx-auto"
+          style={{ color: 'var(--legend)', maxWidth: '44ch' }}
+        >
           No loads yet. Add a device, or start from a preset and correct it against the
           appliance's own rating plate.
         </p>
       ) : (
         <div className="overflow-x-auto">
-          <table className="w-full min-w-[860px] text-sm border-collapse">
+          <table className="w-full min-w-[860px] border-collapse">
             <thead>
-              <tr style={{ background: 'var(--panel-sunk)' }}>
+              <tr style={{ background: 'var(--inset)' }}>
                 {HEADINGS.map(h => (
                   <th
                     key={h.label}
                     scope="col"
-                    className={`px-2 py-2 text-xs font-medium whitespace-nowrap ${
+                    className={`col-head px-2 py-1.5 ${
                       h.align === 'right' ? 'text-right' : 'text-left'
                     }`}
-                    style={{ color: 'var(--ink-soft)' }}
                   >
                     {h.hint ? <Tooltip label={h.hint}>{h.label}</Tooltip> : h.label}
                   </th>
@@ -138,11 +132,11 @@ export function DeviceTable({ result, onAdd, onChange, onRemove, onDuplicate }: 
               ))}
             </tbody>
             <tfoot>
-              <tr style={{ borderTop: '2px solid var(--line-strong)' }}>
-                <td colSpan={7} className="px-2 py-2.5 text-xs font-medium">
+              <tr style={{ borderTop: '2px solid var(--rule-strong)' }}>
+                <td colSpan={7} className="legend px-2 py-2.5">
                   At the loads, before inverter losses
                 </td>
-                <td className="px-2 py-2.5 text-right tabular text-sm font-semibold whitespace-nowrap">
+                <td className="px-2 py-2.5 text-right tabular whitespace-nowrap">
                   {formatWh(result.acLoadWh + result.dcLoadWh)}
                 </td>
                 <td />

@@ -6,6 +6,11 @@ interface Props {
   children: React.ReactNode;
   /** Set when the trigger is already interactive and should not take a second tab stop. */
   inert?: boolean;
+  /**
+   * Wraps a control rather than a run of text: lays out as a block and drops
+   * the dotted underline, which has nothing to underline.
+   */
+  wrapsControl?: boolean;
 }
 
 const MARGIN = 8;
@@ -15,7 +20,7 @@ const MARGIN = 8;
  * trigger, because the device table sits in an overflow-x-auto container that
  * would otherwise clip it.
  */
-export function Tooltip({ label, children, inert = false }: Props) {
+export function Tooltip({ label, children, inert = false, wrapsControl = false }: Props) {
   const triggerRef = useRef<HTMLSpanElement>(null);
   const bubbleRef = useRef<HTMLSpanElement>(null);
   const clampedRef = useRef(false);
@@ -73,7 +78,7 @@ export function Tooltip({ label, children, inert = false }: Props) {
         onMouseLeave={hide}
         onFocus={place}
         onBlur={hide}
-        className="tooltip-trigger"
+        className={wrapsControl ? 'tooltip-shell' : 'tooltip-trigger'}
       >
         {children}
       </span>

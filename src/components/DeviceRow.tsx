@@ -1,4 +1,5 @@
 import { NumberField } from './NumberField';
+import { Tooltip } from './Tooltip';
 import { formatWh } from '../domain/format';
 import type { Device, DeviceLoad } from '../domain/types';
 
@@ -13,8 +14,24 @@ export function DeviceRow({ load, onChange, onRemove, onDuplicate }: Props) {
   const { device } = load;
   const label = device.name || 'this device';
 
+  // Surge only ever moves the inverter rating, and DC never reaches the
+  // inverter, so on a DC row the field would be a control that does nothing.
+  const surgeApplies = device.currentType === 'AC';
+
+  const surgeField = (
+    <NumberField
+      value={device.surgeFactor}
+      min={1}
+      max={10}
+      step={0.5}
+      disabled={!surgeApplies}
+      aria-label={`Surge factor for ${label}`}
+      onChange={surgeFactor => onChange({ surgeFactor })}
+    />
+  );
+
   return (
-    <tr style={{ borderTop: '1px solid var(--line)' }}>
+    <tr className="row-rule">
       <td className="p-2 min-w-44">
         <input
           className="field"
@@ -68,14 +85,16 @@ export function DeviceRow({ load, onChange, onRemove, onDuplicate }: Props) {
       </td>
 
       <td className="p-2 w-24">
-        <NumberField
-          value={device.surgeFactor}
-          min={1}
-          max={10}
-          step={0.5}
-          aria-label={`Surge factor for ${label}`}
-          onChange={surgeFactor => onChange({ surgeFactor })}
-        />
+        {surgeApplies ? (
+          surgeField
+        ) : (
+          <Tooltip
+            wrapsControl
+            label="Surge only sets the inverter rating, and a DC device never goes through the inverter. Switch this row to AC to set it."
+          >
+            {surgeField}
+          </Tooltip>
+        )}
       </td>
 
       <td className="p-2 w-24">
@@ -90,9 +109,7 @@ export function DeviceRow({ load, onChange, onRemove, onDuplicate }: Props) {
         </select>
       </td>
 
-      <td className="p-2 text-right tabular text-sm whitespace-nowrap">
-        {formatWh(load.dailyWh)}
-      </td>
+      <td className="p-2 text-right tabular whitespace-nowrap">{formatWh(load.dailyWh)}</td>
 
       <td className="p-2">
         <div className="flex gap-1 justify-end">
